@@ -4,12 +4,15 @@ from getPath import *
 pardir = getparentdir()
 
 user_log_path = pardir+'/data/user_log_format1.csv'
-merchant_path = pardir +'/middledata/merchant.csv'
 train_path = pardir+'/data/train_format1.csv'
 test_path = pardir+'/data/test_format1.csv'
 
 train_log_path = pardir+'/data/train_log_format1.csv'
 test_log_path = pardir+'/data/test_log_format1.csv'
+
+merchant_path = pardir +'/middledata/merchant.csv'
+item_path = pardir +'/middledata/item.csv'
+
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -31,6 +34,18 @@ def merchantFeature(data):
     merchant.reset_index(level=['merchant_id'],inplace = True)
     merchant.to_csv(merchant_path,encoding='utf-8',mode = 'w', index = False)
     del merchant
+    
+def itemFeature(data):
+    item = pd.DataFrame()
+    group = data.groupby("item_id")
+    item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    item['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
+    item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    item['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
+    del group
+    item.reset_index(level=['item_id'],inplace = True)
+    item.to_csv(item_path,encoding='utf-8',mode = 'w', index = False)
+    del item
 
 def identify_duplicate():
     train= pd.read_csv(train_path,encoding='utf-8')
@@ -61,9 +76,10 @@ def split_train_test(data):
     del s2
 
 if __name__=="__main__":
-    data = pd.read_csv(user_log_path,encoding='utf-8')
-    # merchantFeature(data)
-    split_train_test(data)
+    data = pd.read_csv(train_log_path,encoding='utf-8')
+    merchantFeature(data)
+    itemFeature(data)
+    # split_train_test(data)
     
 
 
