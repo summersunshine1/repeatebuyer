@@ -42,25 +42,27 @@ def identify_duplicate():
     s1 = pd.merge(train_, test_, how='inner', on=['user_id','merchant_id'])
     print(s1)
     
-def split_train_test():
+def split_train_test(data):
     train= pd.read_csv(train_path,encoding='utf-8')
     train_ = train.groupby(['user_id','merchant_id']).count()
     del train
     train_.reset_index(level=['user_id','merchant_id'],inplace = True)
-    train_.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
+    s1 = pd.merge(train_['user_id','merchant_id'],data,how='inner', on=['user_id','merchant_id'])
     del train_
+    s1.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
+    del s1
     test= pd.read_csv(test_path,encoding='utf-8')
     test_ = test.groupby(['user_id','merchant_id']).count()
     del test
-    test_.reset_index(level=['user_id','merchant_id'],inplace = True)
-    test_.to_csv(test_log_path,encoding='utf-8',mode = 'w', index = False)
+    s2 = pd.merge(test_['user_id','merchant_id'],data,how='inner', on=['user_id','merchant_id'])
     del test_
-    
-    
+    s2.to_csv(test_log_path,encoding='utf-8',mode = 'w', index = False)
+    del s2
+
 if __name__=="__main__":
-    # data = pd.read_csv(user_log_path,encoding='utf-8')
+    data = pd.read_csv(user_log_path,encoding='utf-8')
     # merchantFeature(data)
-    split_train_test()
+    split_train_test(data)
     
 
 
