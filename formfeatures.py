@@ -5,6 +5,11 @@ pardir = getparentdir()
 
 user_log_path = pardir+'/data/user_log_format1.csv'
 merchant_path = pardir +'/middledata/merchant.csv'
+train_path = pardir+'/data/test_format1.csv'
+test_path = pardir+'/data/train_format1.csv'
+
+train_log_path = pardir+'/data/train_log_format1.csv'
+test_log_path = pardir+'/data/test_log_format1.csv'
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -27,15 +32,35 @@ def merchantFeature(data):
     merchant.to_csv(merchant_path,encoding='utf-8',mode = 'w', index = False)
     del merchant
 
-def item_feature(data):
-    item = pd.DataFrame()
+def identify_duplicate():
+    train= pd.read_csv(train_path,encoding='utf-8')
+    test = pd.read_csv(test_path,encoding='utf-8')
+    train_ = train.groupby(['user_id','merchant_id']).count()
+    train_.reset_index(level=['user_id','merchant_id'],inplace = True)
+    test_ = test.groupby(['user_id','merchant_id']).count()
+    test_.reset_index(level=['user_id','merchant_id'],inplace = True)
+    s1 = pd.merge(train_, test_, how='inner', on=['user_id','merchant_id'])
+    print(s1)
     
-    
+def split_train_test():
+    train= pd.read_csv(train_path,encoding='utf-8')
+    train_ = train.groupby(['user_id','merchant_id']).count()
+    del train
+    train_.reset_index(level=['user_id','merchant_id'],inplace = True)
+    train_.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
+    del train_
+    test= pd.read_csv(test_path,encoding='utf-8')
+    test_ = test.groupby(['user_id','merchant_id']).count()
+    del test
+    test_.reset_index(level=['user_id','merchant_id'],inplace = True)
+    test_.to_csv(test_log_path,encoding='utf-8',mode = 'w', index = False)
+    del test_
     
     
 if __name__=="__main__":
-    data = pd.read_csv(user_log_path,encoding='utf-8')
-    merchantFeature(data)
+    # data = pd.read_csv(user_log_path,encoding='utf-8')
+    # merchantFeature(data)
+    split_train_test()
     
 
 
