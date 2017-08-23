@@ -47,7 +47,7 @@ def split_train_test(data):
     train_ = train.groupby(['user_id','merchant_id']).count()
     del train
     train_.reset_index(level=['user_id','merchant_id'],inplace = True)
-    s1 = pd.merge(train_['user_id','merchant_id'],data,how='inner', on=['user_id','merchant_id'])
+    s1 = pd.merge(train_[['user_id','merchant_id']],data,how='inner', on=['user_id','merchant_id'])
     del train_
     s1.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
     del s1
@@ -55,7 +55,7 @@ def split_train_test(data):
     test_ = test.groupby(['user_id','merchant_id']).count()
     del test
     test_.reset_index(level=['user_id','merchant_id'],inplace = True)
-    s2 = pd.merge(test_['user_id','merchant_id'],data,how='inner', on=['user_id','merchant_id'])
+    s2 = pd.merge(test_[['user_id','merchant_id']],data,how='inner', on=['user_id','merchant_id'])
     del test_
     s2.to_csv(test_log_path,encoding='utf-8',mode = 'w', index = False)
     del s2
