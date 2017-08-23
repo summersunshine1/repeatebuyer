@@ -4,6 +4,7 @@ from getPath import *
 pardir = getparentdir()
 
 user_log_path = pardir+'/data/user_log_format1.csv'
+merchant_path = pardir +'/middledata/merchant.csv'
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -22,7 +23,15 @@ def merchantFeature(data):
     merchant['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
     merchant['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
     del group
-    print(merchant)
+    merchant.reset_index(level=['seller_id'],inplace = True)
+    merchant.to_csv(merchant_path,encoding='utf-8',mode = 'w', index = False)
+    del merchant
+
+def item_feature(data):
+    item = pd.DataFrame()
+    
+    
+    
     
 if __name__=="__main__":
     data = pd.read_csv(user_log_path,encoding='utf-8')
