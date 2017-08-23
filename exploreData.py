@@ -17,7 +17,12 @@ def analyze_train():
     # print(len(data))
     # print(len(positives)/len(data))
     
-analyze_train()
+def analyze_train_label():
+    data = pd.read_csv(pardir+'/rawdata/data_format2/train_format2.csv')
+    print(len(data))
+    print(len(data[data['label']==-1]))
+    
+analyze_train_label()
     
 
 
