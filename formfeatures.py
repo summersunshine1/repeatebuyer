@@ -18,6 +18,10 @@ user_merchant_path = pardir+'/middledata/user_merchant.csv'
 user_item_path = pardir+'/middledata/user_item.csv'
 user_brand_path = pardir+'/middledata/user_brand.csv'
 user_cate_path = pardir+'/middledata/user_cate.csv'
+merchant_item_path = pardir+'/middledata/merchant_item.csv'
+merchant_brand_path = pardir+'/middledata/merchant_brand.csv'
+merchant_cate_path = pardir+'/middledata/merchant_cate.csv'
+
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -89,9 +93,9 @@ def user_merchant_feature(data):
     user_merchant.to_csv(user_merchant_path,encoding='utf-8',mode = 'w', index = False)
     del user_merchant
     
-def user_other_feature(data,other, user_other_path):
+def one_other_feature(data, one, other, one_other_path):
     user_item = pd.DataFrame()
-    group = data.groupby(['user_id',other])
+    group = data.groupby([one,other])
     user_item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
     gc.collect()
     user_item['add_to_carts']=group.apply(lambda g:len(g[g['action_type']==1]))
@@ -99,8 +103,8 @@ def user_other_feature(data,other, user_other_path):
     user_item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
     gc.collect()
     user_item['add_to_favourite']=group.apply(lambda g:len(g[g['action_type']==3]))
-    user_item.reset_index(level=['user_id',other],inplace = True)
-    user_item.to_csv(use_other_path,encoding='utf-8',mode = 'w', index = False)
+    user_item.reset_index(level=[one,other],inplace = True)
+    user_item.to_csv(one_other_path, encoding='utf-8',mode = 'w', index = False)
     del user_item
 
 def identify_duplicate():
@@ -133,7 +137,16 @@ def split_train_test(data):
 
 if __name__=="__main__":
     data = pd.read_csv(train_log_path,encoding='utf-8')
-    merchantFeature(data)
+    user_merchant_feature(data)
+    ones = ['user_id','merchant_id']
+    others = ['item_id','brand_id','cate_id']
+    path = [user_item_path,user_brand_path,user_cate_path,merchant_item_path, merchant_brand_path, merchant_cate_path]
+    i = 0
+    for one in ones:
+        for other in others:
+            one_other_feature(data, one, other, path[i])
+            i+=1
+    # merchantFeature(data)
     # itemFeature(data)
     # brandFeature(data)
     # split_train_test(data)
