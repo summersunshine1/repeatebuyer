@@ -86,9 +86,9 @@ def brandFeature(data):
 def user_merchant_feature(data):
     user_merchant=pd.DataFrame()
     group = data.groupby(['user_id','merchant_id'])
-    user_merchant['total_items']=group.count()
-    user_merchant['differnt_items'] = (group['item_id'].apply(set).map(len)).as_type(np.int16)
-    user_merchant['differnt_brands'] = (group['brand_id'].apply(set).map(len)).as_type(np.int16)
+    user_merchant['total_items']=group['item_id'].count()
+    user_merchant['differnt_items'] = (group['item_id'].apply(set).map(len)).astype(np.int16)
+    user_merchant['differnt_brands'] = (group['brand_id'].apply(set).map(len)).astype(np.int16)
     user_merchant.reset_index(level=['user_id','merchant_id'],inplace = True)
     user_merchant.to_csv(user_merchant_path,encoding='utf-8',mode = 'w', index = False)
     del user_merchant
