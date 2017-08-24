@@ -14,6 +14,10 @@ test_log_path = pardir+'/data/test_log_format1.csv'
 merchant_path = pardir +'/middledata/merchant.csv'
 item_path = pardir +'/middledata/item.csv'
 brand_path = pardir +'/middledata/brand.csv'
+user_merchant_path = pardir+'/middledata/user_merchant.csv'
+user_item_path = pardir+'/middledata/user_item.csv'
+user_brand_path = pardir+'/middledata/user_brand.csv'
+user_cate_path = pardir+'/middledata/user_cate.csv'
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -35,7 +39,7 @@ def merchantFeature(data):
     merchant['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
     merchant['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
     del group
-    temp = (data.groupby(["merchant_id","user_id"])['time_stamp'].apply(set).map(len)).astype(np.int16)
+    temp = pd.DataFrame((data.groupby(["merchant_id","user_id"])['time_stamp'].apply(set).map(len)).astype(np.int16))
     temp.reset_index(level=["merchant_id","user_id"],inplace = True)
     t = temp[temp['time_stamp']>1]
     del temp
@@ -81,7 +85,23 @@ def user_merchant_feature(data):
     user_merchant['total_items']=group.count()
     user_merchant['differnt_items'] = (group['item_id'].apply(set).map(len)).as_type(np.int16)
     user_merchant['differnt_brands'] = (group['brand_id'].apply(set).map(len)).as_type(np.int16)
-
+    user_merchant.reset_index(level=['user_id','merchant_id'],inplace = True)
+    user_merchant.to_csv(user_merchant_path,encoding='utf-8',mode = 'w', index = False)
+    del user_merchant
+    
+def user_other_feature(data,other, user_other_path):
+    user_item = pd.DataFrame()
+    group = data.groupby(['user_id',other])
+    user_item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    gc.collect()
+    user_item['add_to_carts']=group.apply(lambda g:len(g[g['action_type']==1]))
+    gc.collect()
+    user_item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    gc.collect()
+    user_item['add_to_favourite']=group.apply(lambda g:len(g[g['action_type']==3]))
+    user_item.reset_index(level=['user_id',other],inplace = True)
+    user_item.to_csv(use_other_path,encoding='utf-8',mode = 'w', index = False)
+    del user_item
 
 def identify_duplicate():
     train= pd.read_csv(train_path,encoding='utf-8')
