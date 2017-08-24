@@ -12,7 +12,7 @@ test_log_path = pardir+'/data/test_log_format1.csv'
 
 merchant_path = pardir +'/middledata/merchant.csv'
 item_path = pardir +'/middledata/item.csv'
-
+brand_path = pardir +'middledata/brand.csv'
 
 def merchantFeature(data):
     merchant = pd.DataFrame()
@@ -48,16 +48,23 @@ def itemFeature(data):
     del item
 
 def brandFeature(data):
-    item = pd.DataFrame()
+    brand = pd.DataFrame()
     group = data.groupby("brand_id")
-    item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
-    item['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
-    item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
-    item['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
+    brand['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    brand['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
+    brand['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    brand['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
     del group
-    item.reset_index(level=['item_id'],inplace = True)
-    item.to_csv(item_path,encoding='utf-8',mode = 'w', index = False)
-    del item    
+    brand.reset_index(level=['brand_id'],inplace = True)
+    brand.to_csv(brand_path,encoding='utf-8',mode = 'w', index = False)
+    del brand 
+
+def user_merchant_feature(data):
+    user_merchant=pd.DataFrame()
+    group = data.groupby(['user_id','merchant_id'])
+    user_merchant['total_items']=group.count()
+    user_merchant['differnt_items'] = (group['item_id'].apply(set).map(len)).as_type(np.int16)
+    user_merchant['differnt_brands'] = (group['brand_id'].apply(set).map(len)).as_type(np.int16)
 
 
 def identify_duplicate():
@@ -71,11 +78,17 @@ def identify_duplicate():
     print(s1)
     
 def split_train_test(data):
-    train= pd.read_csv(train_path,encoding='utf-8')
-    s1 = pd.merge(train[['user_id','merchant_id']],data,how='inner', on=['user_id','merchant_id'])
-    s1.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
-    del s1
+    # train= pd.read_csv(train_path,encoding='utf-8')
+    # s1 = pd.merge(train[['user_id','merchant_id']],data,how='inner', on=['user_id','merchant_id'])
+    # s1.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
+    # del s1
     test= pd.read_csv(test_path,encoding='utf-8')
+    test['key']=test['user_id'].apply(str)+'_'+test['merchant_id'].apply(str)
+    data['key']=data['user_id'].apply(str)+'_'+data['merchant_id'].apply(str)
+    train = data[~data.key.isin(test.key)]
+    train.drop('key',1, inplace = True)
+    train.to_csv(train_log_path,encoding='utf-8',mode = 'w', index = False)
+    del train
     s2 = pd.merge(test[['user_id','merchant_id']],data,how='inner', on=['user_id','merchant_id'])
     del test
     s2.to_csv(test_log_path,encoding='utf-8',mode = 'w', index = False)
@@ -83,12 +96,11 @@ def split_train_test(data):
 
 
 if __name__=="__main__":
-    data = pd.read_csv(user_log_path,encoding='utf-8')
-    newdata = data[0:10]
-    print(newdata)
-    del data
-   # Q
-    split_train_test(newdata)
+    data = pd.read_csv(train_log_path,encoding='utf-8')
+    merchantFeature(data)
+    itemFeature(data)
+    brandFeature(data)
+    # split_train_test(data)
     # test()
     
 
