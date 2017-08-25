@@ -93,6 +93,24 @@ def user_merchant_feature(data):
     user_merchant.to_csv(user_merchant_path,encoding='utf-8',mode = 'w', index = False)
     del user_merchant
     
+class Groupby:
+    def __init__(self, keys):
+        _, self.keys_as_int = np.unique(keys, return_inverse = True)
+        self.n_keys = max(self.keys_as_int)
+        self.set_indices()
+        
+    def set_indices(self):
+        self.indices = [[] for i in range(self.n_keys+1)]
+        for i, k in enumerate(self.keys_as_int):
+            self.indices[k].append(i)
+        self.indices = [np.array(elt) for elt in self.indices]
+        
+    def apply(self, function, vector):
+        result = np.zeros(len(vector))
+        for k in range(self.n_keys):
+            result[self.indices[k]] = function(vector[self.indices[k]])
+        return result
+    
 def one_other_feature(data, one, other, one_other_path):
     user_item = pd.DataFrame()
     group = data.groupby([one,other])
