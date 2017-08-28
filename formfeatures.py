@@ -157,7 +157,7 @@ if __name__=="__main__":
     data = pd.read_csv(train_log_path,encoding='utf-8')
     user_merchant_feature(data)
     ones = ['user_id','merchant_id']
-    others = ['item_id','brand_id','cate_id']
+    others = ['item_id','brand_id','cat_id']
     path = [user_item_path,user_brand_path,user_cate_path,merchant_item_path, merchant_brand_path, merchant_cate_path]
     i = 0
     for one in ones:

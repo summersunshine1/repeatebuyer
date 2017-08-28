@@ -9,13 +9,12 @@ expand_path = pardir+'/middledata/train_data.csv'
 
 def expand():
     data = pd.read_csv(user_log_path,encoding='utf-8')
-    total = pd.DataFrame(data.groupby(['merchant_id','item_id'])['brand_id','cate_id'])
+    total = pd.DataFrame(data.groupby(['merchant_id','item_id'])['brand_id','cat_id'].first())
     del data
     total.reset_index(level=['merchant_id','item_id'],inplace = True)
     train_data = pd.read_csv(train_path,encoding='utf-8')
     res = pd.merge(train_data, total, on=['merchant_id'])
     del train_data,total
-    
     res.to_csv(expand_path,encoding='utf-8',mode = 'w', index = False)
     
 if __name__=="__main__":
