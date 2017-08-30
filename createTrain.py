@@ -1,5 +1,12 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import KFold
+from sklearn.cross_validation import train_test_split
+from sklearn import preprocessing
+from sklearn import linear_model
+from onehotencoder import *
+from getPath import *
+pardir = getparentdir()
 
 merchant_path = pardir +'/middledata/merchant.csv'
 item_path = pardir +'/middledata/item.csv'
@@ -11,11 +18,31 @@ user_cate_path = pardir+'/middledata/user_cate.csv'
 merchant_item_path = pardir+'/middledata/merchant_item.csv'
 merchant_brand_path = pardir+'/middledata/merchant_brand.csv'
 merchant_cate_path = pardir+'/middledata/merchant_cate.csv'
+user_path = pardir+'/data/user_info_format1.csv'
 
 train_path = pardir+'/middledata/train_data.csv'
 
 train_split_path = pardir+'/middledata/train_split.csv'
 test_split_path = pardir+'/middledata/test_split.csv'
+user_info_code_path = pardir+'/middledata/user_info_encode.csv'
+
+def get_user_data():
+    data = pd.read_csv(user_path, encoding='utf-8')
+    agerange = 9
+    ageonecode = encodebins(agerange)
+    data['age_range'].fillna(0,inplace=True)
+    data['gender'].fillna(2,inplace=True)
+    columns = ['user_id']
+    for i in range(agerange):
+        data["age"+str(i)] = data['age_range'].map(lambda x:ageonecode[int(x)][i])
+        columns.append("age"+str(i))
+    sexrange = 3
+    sexcode = encodebins(sexrange)
+    for i in range(sexrange):
+        data["sex"+str(i)] = data['gender'].map(lambda x:sexcode[int(x)][i])
+        columns.append("sex"+str(i))
+    data[columns].to_csv(user_info_code_path, encoding='utf-8',mode = 'w',index = False)
+    return data[columns]
 
 def combineFeatures():
     train_data = pd.read_csv(train_path,encoding='utf-8')
@@ -49,7 +76,9 @@ def combineFeatures():
     merchant_cate_data = pd.read_csv(merchant_cate_path,encoding='utf-8')
     tenth = pd.merge(ninth, merchant_cate_data, on=['merchant_id','cat_id'])
     del ninth,merchant_cate_data
-    X_train,X_test = sampleTest(tenth)
+    user_data = get_user_data()
+    elenvth = pd.merge(user_data, tenth, on=['user_id'])
+    X_train,X_test = sampleTest(elenvth)
     X_train.to_csv(train_split_path,encoding='utf-8',mode = 'w', index = False)
     X_test.to_csv(test_split_path,encoding='utf-8',mode = 'w', index = False)
     
