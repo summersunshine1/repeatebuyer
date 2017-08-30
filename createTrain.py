@@ -82,6 +82,9 @@ def combineFeatures():
     X_train.to_csv(train_split_path,encoding='utf-8',mode = 'w', index = False)
     X_test.to_csv(test_split_path,encoding='utf-8',mode = 'w', index = False)
     
+def add_actiontype():
+    
+    
     
 def sampleTest(list):
     X_train, X_test= train_test_split(list, test_size=0.1,random_state=2)

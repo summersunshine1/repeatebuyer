@@ -22,7 +22,6 @@ merchant_item_path = pardir+'/middledata/merchant_item.csv'
 merchant_brand_path = pardir+'/middledata/merchant_brand.csv'
 merchant_cate_path = pardir+'/middledata/merchant_cate.csv'
 
-
 def merchantFeature(data):
     merchant = pd.DataFrame()
     merchant['item_set']=data.groupby("merchant_id")['item_id'].apply(set)
@@ -155,20 +154,23 @@ def split_train_test(data):
 
 if __name__=="__main__":
     data = pd.read_csv(train_log_path,encoding='utf-8')
-    user_merchant_feature(data)
-    ones = ['user_id','merchant_id']
-    others = ['item_id','brand_id','cat_id']
-    path = [user_item_path,user_brand_path,user_cate_path,merchant_item_path, merchant_brand_path, merchant_cate_path]
-    i = 0
-    for one in ones:
-        for other in others:
-            one_other_feature(data, one, other, path[i])
-            i+=1
+    # user_merchant_feature(data)
+    # ones = ['user_id','merchant_id']
+    # others = ['item_id','brand_id','cat_id']
+    # path = [user_item_path,user_brand_path,user_cate_path,merchant_item_path, merchant_brand_path, merchant_cate_path]
+    # i = 0
+    # for one in ones:
+        # for other in others:
+            # one_other_feature(data, one, other, path[i])
+            # i+=1
     # merchantFeature(data)
     # itemFeature(data)
     # brandFeature(data)
     # split_train_test(data)
     # test()
+    train_data = pd.read_csv(train_path,encoding='utf-8')
+    newdata = pd.merge(train_data,data,how='inner', on=['user_id','merchant_id'])
+    print(newdata.groupby(['user_id','merchant_id','item_id','time_stamp'])['action_type'].count())
     
 
 
