@@ -34,14 +34,14 @@ def merchantFeature(data):
     merchant['brand_num']=(merchant['brand_set'].map(len)).astype(np.int16)
     merchant.drop('brand_set',1,inplace=True)
     merchant['user_set']=data.groupby("merchant_id")['user_id'].apply(set)
-    merchant['user_num']=(merchant['user_set'].map(len)).astype(np.int16)
+    merchant['user_num']=(merchant['user_set'].map(len)).astype(np.int32)
     merchant.drop('user_set',1,inplace=True)
-    group = data.groupby("merchant_id")
-    merchant['click']=group.apply(lambda g:len(g[g['action_type']==0]))
-    merchant['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
-    merchant['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
-    merchant['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
-    del group
+
+    # merchant['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    # merchant['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
+    # merchant['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    # merchant['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
+    # del group
     temp = pd.DataFrame((data.groupby(["merchant_id","user_id"])['time_stamp'].apply(set).map(len)).astype(np.int16))
     temp.reset_index(level=["merchant_id","user_id"],inplace = True)
     t = temp[temp['time_stamp']>1]
@@ -49,38 +49,51 @@ def merchantFeature(data):
     merchant['repeat_users']=t.groupby('merchant_id')['user_id'].count().astype(np.int16)
     del t
     merchant.reset_index(level=['merchant_id'],inplace = True)
-    merchant.to_csv(merchant_path,encoding='utf-8',mode = 'w', index = False)
+    c = pd.DataFrame({'count':data.groupby(["merchant_id",'action_type']).size()}).reset_index()
+    table = pd.pivot_table(c, values='count', index=["merchant_id"],columns=['action_type'],fill_value=0)
+    table.reset_index(level=["merchant_id"],inplace = True)
+    res = pd.merge(merchant,table,on="merchant_id")
     del merchant
+    res.to_csv(merchant_path,encoding='utf-8',mode = 'w', index = False)
+    del res
     
+def oneitemfeature(data,col,path):
+    c = pd.DataFrame({'count':data.groupby([col,'action_type']).size()}).reset_index()
+    table = pd.pivot_table(c, values='count', index=[col],columns=['action_type'],fill_value=0)
+    table.reset_index(level=[col],inplace = True)
+    table.to_csv(path, encoding='utf-8',mode = 'w', index = False)
+  
 def itemFeature(data):
-    item = pd.DataFrame()
-    group = data.groupby("item_id")
-    item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
-    gc.collect()
-    item['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
-    gc.collect()
-    item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
-    gc.collect()
-    item['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
-    del group
-    item.reset_index(level=['item_id'],inplace = True)
-    item.to_csv(item_path,encoding='utf-8',mode = 'w', index = False)
-    del item
+    oneitemfeature(data, "item_id", item_path)
+    # item = pd.DataFrame()
+    # group = data.groupby("item_id")
+    # item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    # gc.collect()
+    # item['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
+    # gc.collect()
+    # item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    # gc.collect()
+    # item['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
+    # del group
+    # item.reset_index(level=['item_id'],inplace = True)
+    # item.to_csv(item_path,encoding='utf-8',mode = 'w', index = False)
+    # del item
 
 def brandFeature(data):
-    brand = pd.DataFrame()
-    group = data.groupby("brand_id")
-    brand['click']=group.apply(lambda g:len(g[g['action_type']==0]))
-    gc.collect()
-    brand['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
-    gc.collect()
-    brand['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
-    gc.collect()
-    brand['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
-    del group
-    brand.reset_index(level=['brand_id'],inplace = True)
-    brand.to_csv(brand_path,encoding='utf-8',mode = 'w', index = False)
-    del brand 
+    oneitemfeature(data, "brand_id", brand_path)
+    # brand = pd.DataFrame()
+    # group = data.groupby("brand_id")
+    # brand['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    # gc.collect()
+    # brand['add_to_carts'] =group.apply(lambda g:len(g[g['action_type']==1]))
+    # gc.collect()
+    # brand['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    # gc.collect()
+    # brand['add_to_favourite'] =group.apply(lambda g:len(g[g['action_type']==3]))
+    # del group
+    # brand.reset_index(level=['brand_id'],inplace = True)
+    # brand.to_csv(brand_path,encoding='utf-8',mode = 'w', index = False)
+    # del brand 
 
 def user_merchant_feature(data):
     user_merchant=pd.DataFrame()
@@ -111,18 +124,20 @@ class Groupby:
         return result
     
 def one_other_feature(data, one, other, one_other_path):
-    user_item = pd.DataFrame()
-    group = data.groupby([one,other])
-    user_item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
-    gc.collect()
-    user_item['add_to_carts']=group.apply(lambda g:len(g[g['action_type']==1]))
-    gc.collect()
-    user_item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
-    gc.collect()
-    user_item['add_to_favourite']=group.apply(lambda g:len(g[g['action_type']==3]))
-    user_item.reset_index(level=[one,other],inplace = True)
-    user_item.to_csv(one_other_path, encoding='utf-8',mode = 'w', index = False)
-    del user_item
+    c = pd.DataFrame({'count':data.groupby([one,other,'action_type']).size()}).reset_index()
+    table = pd.pivot_table(c, values='count', index=[one, other],columns=['action_type'],fill_value=0)
+    table.reset_index(level=[one, other],inplace = True)
+    table.to_csv(one_other_path, encoding='utf-8',mode = 'w', index = False)
+    # user_item['click']=group.apply(lambda g:len(g[g['action_type']==0]))
+    # gc.collect()
+    # user_item['add_to_carts']=group.apply(lambda g:len(g[g['action_type']==1]))
+    # gc.collect()
+    # user_item['purchase']=group.apply(lambda g:len(g[g['action_type']==2]))
+    # gc.collect()
+    # user_item['add_to_favourite']=group.apply(lambda g:len(g[g['action_type']==3]))
+    # user_item.reset_index(level=[one,other],inplace = True)
+    # user_item.to_csv(one_other_path, encoding='utf-8',mode = 'w', index = False)
+    # del user_item
 
 def identify_duplicate():
     train= pd.read_csv(train_path,encoding='utf-8')
@@ -153,7 +168,8 @@ def split_train_test(data):
 
 
 if __name__=="__main__":
-    data = pd.read_csv(train_log_path,encoding='utf-8')
+    data = pd.read_csv(user_log_path,encoding='utf-8')
+    # merchantFeature(data)
     # user_merchant_feature(data)
     # ones = ['user_id','merchant_id']
     # others = ['item_id','brand_id','cat_id']
@@ -163,14 +179,15 @@ if __name__=="__main__":
         # for other in others:
             # one_other_feature(data, one, other, path[i])
             # i+=1
-    # merchantFeature(data)
+    merchantFeature(data)
     # itemFeature(data)
     # brandFeature(data)
     # split_train_test(data)
     # test()
-    train_data = pd.read_csv(train_path,encoding='utf-8')
-    newdata = pd.merge(train_data,data,how='inner', on=['user_id','merchant_id'])
-    print(newdata.groupby(['user_id','merchant_id','item_id','time_stamp'])['action_type'].count())
+    # train_data = pd.read_csv(train_path,encoding='utf-8')
+    # newdata = pd.merge(train_data,data,how='inner', on=['user_id','merchant_id'])
+    # print(newdata.groupby(['user_id','merchant_id','item_id','time_stamp','actinon_type'])
+    
     
 
 
