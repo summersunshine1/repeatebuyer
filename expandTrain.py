@@ -3,9 +3,9 @@ import numpy as np
 from getPath import *
 pardir = getparentdir()
 
-train_path = pardir + '/data/train_format1.csv'
+train_path = pardir + '/data/test_format1.csv'
 user_log_path = pardir+'/data/user_log_format1.csv'
-expand_path = pardir+'/middledata/train_data.csv'
+expand_path = pardir+'/middledata/test_data.csv'
 
 def expand():
     data = pd.read_csv(user_log_path,encoding='utf-8')
