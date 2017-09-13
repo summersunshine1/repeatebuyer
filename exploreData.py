@@ -4,12 +4,15 @@ pardir = getparentdir()
 
 def analyze_train():
     data = pd.read_csv(pardir+'/data/user_log_format1.csv')
+    countdf = pd.DataFrame({'count':data.groupby("item_id")['merchant_id'].nunique()}).reset_index()
+    morethanone = countdf['item_id'][countdf['count']>1]
+    print(morethanone)
     # users = len(data.groupby('user_id').size())
     # merchants = len(data.groupby('merchant_id').size())
     # positives = data['label'][data['label']==1]
-    data.rename(index=str, columns={'seller_id':'merchant_id'}, inplace=True)
-    data.to_csv(pardir+'/data/user_log_format1.csv',encoding='utf-8',mode = 'w', index = False)
-    del data
+    # data.rename(index=str, columns={'seller_id':'merchant_id'}, inplace=True)
+    # data.to_csv(pardir+'/data/user_log_format1.csv',encoding='utf-8',mode = 'w', index = False)
+    # del data
     # print(data)
     # print(users)
     # print(merchants)
@@ -22,7 +25,7 @@ def analyze_train_label():
     print(len(data))
     print(len(data[data['label']==-1]))
     
-analyze_train_label()
+analyze_train()
     
 
 

@@ -25,7 +25,22 @@ respath = pardir+'/middledata/res.csv'
 exceptcolumns = ['user_id','merchant_id','item_id','brand_id','cat_id','label']
 test_except_columns = ['user_id','merchant_id','item_id','brand_id','cat_id','prob']
 
-def get_train_data():
+def getTrainData():
+    data = pd.read_csv(train_split_path,encoding='utf-8')
+    columns = list(data.columns.values)
+    features = list(set(columns)-set(exceptcolumns))
+    x = data[features]
+    y = data['label']
+    return x,y
+    
+def getPredictData():
+    data = pd.read_csv(test_allinfo_path,encoding='utf-8')
+    columns = list(data.columns.values)
+    features = list(set(columns)-set(test_except_columns))
+    x = data[features]
+    return x
+
+def createmodel():
     data = pd.read_csv(train_split_path,encoding='utf-8')
     columns = list(data.columns.values)
     features = list(set(columns)-set(exceptcolumns))
