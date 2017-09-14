@@ -28,10 +28,13 @@ def createmodel():
         print("first train"+str(i))
         train = x_arr[train_indexs[i]]
         label = y_arr[train_indexs[i]]
-        regr = LinearSVR(random_state=0)
-        regr.fit(train,label)
-        joblib.dump(regr, pardir+'/model/lr'+str(i)+".pkl")
-        # regr = joblib.load(pardir+'/model/lr'+str(i)+".pkl")
+        path = pardir+'/model/lr'+str(i)+".pkl"
+        if os.path.exists(path):
+            regr = joblib.load(pardir+'/model/lr'+str(i)+".pkl")
+        else:
+            regr = LinearSVR(random_state=0)
+            regr.fit(train,label)
+            joblib.dump(regr, pardir+'/model/lr'+str(i)+".pkl")
         res = regr.predict(x_arr[test_indexs[i]])
         firstlayer+=list(res)
         res = regr.predict(test_data)
@@ -46,11 +49,13 @@ def createmodel():
         print("second train"+str(i))
         train = firstlayer[train_indexs[i]]
         label = y_arr[train_indexs[i]]
-        # clf = joblib.load(pardir+'/model/rf'+str(i)+".pkl")
-        clf = RandomForestClassifier(random_state=0)
-        clf.fit(train,label)
-        joblib.dump(clf, pardir+'/model/rf'+str(i)+".pkl")
-        # res = clf.predict(test_data[test_indexs[i]])
+        path = pardir+'/model/rf'+str(i)+".pkl"
+        if os.path.exists(path):
+            regr = joblib.load(path)
+        else:
+            clf = RandomForestClassifier(random_state=0)
+            clf.fit(train,label)
+            joblib.dump(clf, path)
         res = clf.predict_proba(test)
         test.append(res[:,1])
     res = np.mean(test,axis = 0)
