@@ -38,7 +38,8 @@ def getPredictData():
     columns = list(data.columns.values)
     features = list(set(columns)-set(test_except_columns))
     x = data[features]
-    return x
+    ids = data[['user_id','merchant_id']]
+    return x,ids
 
 def createmodel():
     data = pd.read_csv(train_split_path,encoding='utf-8')

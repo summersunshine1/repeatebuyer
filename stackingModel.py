@@ -1,8 +1,9 @@
 from sklearn.model_selection import KFold
 from createmodel import *
 from sklearn.svm import LinearSVR
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.externals import joblib
+from sklearn.linear_model import LinearRegression
 
 stacking_res_path = pardir+'/middledata/stackingres.csv'
 
@@ -17,11 +18,11 @@ def get_k_fold(data):
     
 def createmodel():
     x,y = getTrainData()
-    test_data = getPredictData()
+    test_data,ids = getPredictData()
     train_indexs,test_indexs = get_k_fold(x)
+    length = len(x)
+    firstlayer = np.array([1.0]*length)
     #stacking linearsvr
-    firstlayer = []
-    test = []
     x_arr = np.array(x)
     y_arr = np.array(y)
     for i in range(len(train_indexs)):
@@ -32,22 +33,31 @@ def createmodel():
         if os.path.exists(path):
             regr = joblib.load(pardir+'/model/lr'+str(i)+".pkl")
         else:
-            regr = LinearSVR(random_state=0)
+            regr = LinearRegression(normalize=True)
             regr.fit(train,label)
             joblib.dump(regr, pardir+'/model/lr'+str(i)+".pkl")
         res = regr.predict(x_arr[test_indexs[i]])
-        firstlayer+=list(res)
-        res = regr.predict(test_data)
-        test.append(res)
-    test = np.mean(test,axis = 0)
-    test = [[t] for t in test]
-    # firstlayer = x_arr
-    secondlayer =[]
-    finalres = []
+        firstlayer[test_indexs[i]] = res
+        # res = regr.predict(test_data)
+        # test.append(res)
     firstlayer = np.array([[f] for f in firstlayer])
+    path = pardir+'/model/lrtest.pkl'
+    if os.path.exists(path):
+        clf = joblib.load(path)
+    else:
+        clf = LinearRegression(normalize=True)
+        clf.fit(x_arr,y_arr)
+        joblib.dump(clf, path)
+    test1 = clf.predict(test_data)
+    test1 = np.array([[t] for t in test1])
+    # test = np.mean(test,axis = 0)
+    # test = [[t] for t in test]
+    # firstlayer = x_arr
+    secondlayer = np.array([1.0]*length)
+    finalres = []
     for i in range(len(train_indexs)):
         print("second train"+str(i))
-        train = firstlayer[train_indexs[i]]
+        train = x_arr[train_indexs[i]]
         label = y_arr[train_indexs[i]]
         path = pardir+'/model/rf'+str(i)+".pkl"
         if os.path.exists(path):
@@ -56,11 +66,27 @@ def createmodel():
             clf = RandomForestClassifier(random_state=0)
             clf.fit(train,label)
             joblib.dump(clf, path)
-        res = clf.predict_proba(test)
-        test.append(res[:,1])
-    res = np.mean(test,axis = 0)
-    test_data['prob'] = res
-    res = pd.DataFrame({'prob':test_data.groupby(['user_id','merchant_id'])['prob'].max()}).reset_index()
+        res = clf.predict(x_arr[test_indexs[i]])
+        secondlayer[test_indexs[i]] = res
+    secondlayer = np.array([[f] for f in secondlayer])
+    path = pardir+'/model/rftest.pkl'
+    if os.path.exists(path):
+        clf = joblib.load(path)
+    else:
+        clf = RandomForestClassifier(random_state=0)
+        clf.fit(x_arr,y_arr)
+        joblib.dump(clf, path)
+    test2 = (clf.predict_proba(test_data))[:,1]
+    test2 = np.array([[t] for t in test2])
+    # res = np.mean(test,axis = 0
+    
+    train = np.hstack((x_arr,firstlayer,secondlayer))
+    test = np.hsatck((test_data,firstlayer,secondlayer))
+    clf =  GradientBoostingClassifier()
+    clf.fit(train, y_arr)
+    predict_res = clf.predict_proba(test)
+    ids['prob'] = predict_res
+    res = pd.DataFrame({'prob':ids.groupby(['user_id','merchant_id'])['prob'].max()}).reset_index()
     res.to_csv(stacking_res_path,encoding='utf-8',mode = 'w', index = False)
  
 if __name__=="__main__":
