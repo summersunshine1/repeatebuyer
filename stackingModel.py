@@ -81,11 +81,19 @@ def createmodel():
     # res = np.mean(test,axis = 0
     
     train = np.hstack((x_arr,firstlayer,secondlayer))
-    test = np.hsatck((test_data,firstlayer,secondlayer))
-    clf =  GradientBoostingClassifier()
-    clf.fit(train, y_arr)
+    test = np.hstack((test_data,test1,test2))
+    path = pardir+'/model/gbdt.pkl'
+    if not os.path.exists(path):
+        clf =  GradientBoostingClassifier()
+        clf.fit(train, y_arr)
+        joblib.dump(clf, path)
+    else:
+        clf = joblib.load(path)
+  
     predict_res = clf.predict_proba(test)
-    ids['prob'] = predict_res
+    # print(clf.classes_)
+    # print(predict_res)
+    ids['prob'] = predict_res[:,1]
     res = pd.DataFrame({'prob':ids.groupby(['user_id','merchant_id'])['prob'].max()}).reset_index()
     res.to_csv(stacking_res_path,encoding='utf-8',mode = 'w', index = False)
  

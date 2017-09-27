@@ -25,7 +25,13 @@ def analyze_train_label():
     print(len(data))
     print(len(data[data['label']==-1]))
     
-analyze_train()
+def analyze_train_data():
+    data = pd.read_csv(pardir+'/middledata/train_split1.csv')
+    countdf = pd.DataFrame({'count':data.groupby(["merchant_id","user_id"])['label'].nunique()}).reset_index()
+    morethanone = countdf[["merchant_id","user_id"]][countdf['count']>1]
+    print(morethanone)
+    
+analyze_train_data()
     
 
 
